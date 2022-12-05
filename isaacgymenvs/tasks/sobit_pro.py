@@ -73,7 +73,8 @@ class SobitPro(VecTask):
         upper = gymapi.Vec3(0.5 * spacing, spacing, spacing)
 
         asset_root = os.path.join(os.path.dirname(os.path.abspath(__file__)), "../../assets")
-        asset_file = "urdf/sobits/sobit_pro/sobit_pro.urdf"
+        asset_file = "urdf/sobits/sobit_pro_description/sobit_pro.urdf"
+        # asset_file = "urdf/sobit_pro.urdf"
 
         if "asset" in self.cfg["env"]:
             asset_root = os.path.join(os.path.dirname(os.path.abspath(__file__)), self.cfg["env"]["asset"].get("assetRoot", asset_root))

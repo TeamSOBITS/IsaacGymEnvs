@@ -15,7 +15,8 @@ env:
 
   asset:
     assetRoot: "../../assets"
-    assetFileName: "urdf/sobits/sobit_pro/sobit_pro.urdf"
+    assetFileName: "urdf/sobits/sobit_pro_description/sobit_pro.urdf"
+    # assetFileName: "urdf/sobit_pro.urdf"
 
   # set to True if you use camera sensors in the environment
   enableCameraSensors: False
