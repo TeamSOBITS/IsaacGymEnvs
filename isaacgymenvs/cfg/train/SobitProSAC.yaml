@@ -2,19 +2,18 @@ params:
   seed: ${...seed}
 
   algo:
-    name: a2c_continuous
+    name: sac
 
   model:
-    name: continuous_a2c_logstd
+    name: soft_actor_critic
 
   network:
-    name: actor_critic
-    separate: False
+    name: soft_actor_critic
+    separate: True
     space:
       continuous:
         mu_activation: None
         sigma_activation: None
-
         mu_init:
           name: default
         sigma_init:
@@ -22,13 +21,14 @@ params:
           val: 0
         fixed_sigma: True
     mlp:
-      units: [32, 32]
-      activation: elu
-      
+      units: [256, 256]
+      d2rl: False
+      activation: relu
       initializer:
         name: default
       regularizer:
-        name: None
+        name: None # no in the dafault rl-games config file
+    log_std_bounds: [-5, 2]
 
   load_checkpoint: ${if:${...checkpoint},True,False} # flag which sets whether to load the checkpoint
   load_path: ${...checkpoint} # path to the checkpoint to load
@@ -37,31 +37,43 @@ params:
     name: ${resolve_default:SobitPro,${....experiment}}
     full_experiment_name: ${.name}
     env_name: rlgpu
-    ppo: True
+    ppo: False
     mixed_precision: False
     normalize_input: True
     normalize_value: True
     num_actors: ${....task.env.numEnvs}
     reward_shaper:
+      # min_val: -1
       scale_value: 0.1
     normalize_advantage: True
     gamma: 0.99
-    tau: 0.95
-    learning_rate: 3e-4
+    tau: 0.95 # Lambda for GAE
+    init_alpha: 1
+    alpha_lr: 0.005
+    actor_lr: 0.0005
+    critic_lr: 0.0005
+    critic_tau: 0.005
+    batch_size: 4096
+    replay_buffer_size: 1000000
+    learnable_temperature: True
+    num_warmup_steps: 10
+    learning_rate: 3e-4 # overwritten by adaptive lr_schedule
     lr_schedule: adaptive
     kl_threshold: 0.008
-    score_to_win: 20000
-    max_epochs: ${resolve_default:100,${....max_iterations}}
+    score_to_win: 200000
+    max_epochs: ${resolve_default:1000,${....max_iterations}}
+    # num_steps_per_episode: 16
     save_best_after: 50
     save_frequency: 25
-    grad_norm: 1.0
+    grad_norm: 1.0 # Good value is in (1.0, 10.0) 
     entropy_coef: 0.0
     truncate_grads: True
-    e_clip: 0.2
-    horizon_length: 16
-    minibatch_size: 8192
-    mini_epochs: 8
-    critic_coef: 4
-    clip_value: True
+    # e_clip: 0.2 # not used in sac
+    horizon_length: 120
+    minibatch_size: 256 # Total number number of steps must be divisible by minibatch size # batch size = num_envs * horizon_length | minibatch_size = batch_size / num_minibatches
+    # minibatch_size_per_env: 8 # override minibatch_size
+    mini_epochs: 8 # Good value is in [1,10]   
+    critic_coef: 4 # critic_loss = critic_coef * 1/2 * MSE
+    clip_value: False # If you are using normalize_value you don't need it
     seq_len: 4
-    bounds_loss_coef: 0.0001
+    bounds_loss_coef: 0.0001 # Coefficient to the auxiary loss for continuous space
