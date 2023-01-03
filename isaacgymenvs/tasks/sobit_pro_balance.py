@@ -443,9 +443,9 @@ class SobitProBalance(VecTask):
         # Overwrite move_base init pos (no noise)
         pos[:, 5:] = self.robot_default_dof_pos[5:]
             
-        # Set any position control to the current position, and any vel control to be 0
+        # Reset the internal obs accordingly
         self._dof_positions[env_ids, :] = pos
-        self._dof_velocities[env_ids, :] = torch.zeros_like(pos)
+        self._dof_velocities[env_ids, :] = torch.zeros_like(self._dof_velocities[env_ids])
         # TODO set velocity!!!!!!!!!!
 
         # Set any position control to the current position, and any vel / effort control to be 0
@@ -569,29 +569,19 @@ class SobitProBalance(VecTask):
         self.actions = _actions.clone().to(self.device)
 
         actuated_idx = torch.LongTensor([0,1,2,3,4])
-        base_idx = torch.LongTensor([6,8,10,12])
 
         # update position targets from actions
         self._dof_position_targets[..., actuated_idx] += self.dt * self.action_speed_scale * self.actions
-        # self._dof_position_targets[..., 0:5] += self.dt * self.action_speed_scale * self.actions # ori test
-        self._dof_position_targets[:] = tensor_clamp(self._dof_position_targets, self.robot_dof_lower_limits, self.robot_dof_upper_limits) # ori
-
-        # self._dof_velocity_targets[..., base_idx] = self.robot_dof_vel_upper_limits[base_idx]
-        # self._dof_velocity_targets[:] = tensor_clamp(self._dof_velocity_targets, self.robot_dof_vel_lower_limits, self.robot_dof_vel_upper_limits)
-
+        self._dof_position_targets[:] = tensor_clamp(self._dof_position_targets, self.robot_dof_lower_limits, self.robot_dof_upper_limits) 
+        
         # Control arm (scale value first)
         # self._arm_control[:, :] += self.dt * self.action_speed_scale * self.actions
         # self._arm_control[:] = tensor_clamp(self._arm_control, self.robot_dof_lower_limits[:5], self.robot_dof_upper_limits[:5])
         # self._arm_control[:] = 0.0
 
-        # reset position targets for reset envs
-        # self._dof_position_targets[reset_env_ids] = 0
-
         # Deploy actions
-        self.gym.set_dof_position_target_tensor(self.sim, gymtorch.unwrap_tensor(self._dof_position_targets)) # ori
-        # self.gym.set_dof_velocity_target_tensor(self.sim, gymtorch.unwrap_tensor(self._dof_velocity_targets))
-        # self.gym.set_dof_position_target_tensor(self.sim, gymtorch.unwrap_tensor(self._pos_control)) # best
-        # self.gym.set_dof_actuation_force_tensor(self.sim, gymtorch.unwrap_tensor(self._effort_control))
+        self.gym.set_dof_position_target_tensor(self.sim, gymtorch.unwrap_tensor(self._dof_position_targets))
+        # self.gym.set_dof_position_target_tensor(self.sim, gymtorch.unwrap_tensor(self._pos_control))
 
     def post_physics_step(self):
         self.progress_buf += 1
