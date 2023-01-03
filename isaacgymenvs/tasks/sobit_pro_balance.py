@@ -135,6 +135,7 @@ class SobitProBalance(VecTask):
         self._dof_positions = None          # Joint positions     (n_envs, n_dof)
         self._dof_velocities = None         # Joint velocities    (n_envs, n_dof)
         self._dof_position_targets = None
+        self._dof_velocity_targets = None
 
         self._arm_control = None            # Tensor buffer for controlling arm
         self._pos_control = None            # Position actions
@@ -154,13 +155,13 @@ class SobitProBalance(VecTask):
 
         # Robot initial DoF pose: (arm) -> pi/2(0), -pi/2(1), 0(2), pi/2(3), 0(4); (bot)->0,0,0,0,0,0,0,0
         self.robot_default_dof_pos = to_torch(
-            # 0    1    2    3    4           5      6          7      8          9      10          11     12
-            [0.0, 0.0, 0.0, 0.0, 0.0, -math.pi/4.0, 0.0, math.pi/4.0, 0.0, math.pi/4.0, 0.0, -math.pi/4.0, 0.0], dtype=torch.float, device=self.device
+            # 0    1    2    3    4         5      6        7      8        9      10        11     12
+            [0.0, 0.0, 0.0, 0.0, 0.0, -np.pi/4.0, 0.0, np.pi/4.0, 0.0, np.pi/4.0, 0.0, -np.pi/4.0, 0.0], device=self.device
             # [math.pi/2, -math.pi/2, 0.0, math.pi, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0], device=self.device
         )
         self.robot_default_dof_vel_pos = to_torch(
             # 0    1    2    3    4    5    6    7    8    9    10   11   12
-            [0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0], dtype=torch.float, device=self.device
+            [0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0], device=self.device
         )
         # Refresh tensors
         self._refresh()
@@ -349,8 +350,7 @@ class SobitProBalance(VecTask):
 
         # Initialize targets
         self._dof_position_targets = torch.zeros((self.num_envs, self.num_dofs), dtype=torch.float32, device=self.device, requires_grad=False)
-
-
+        self._dof_velocity_targets = torch.zeros((self.num_envs, self.num_dofs), dtype=torch.float32, device=self.device, requires_grad=False)
 
     def _update_states(self):
         self.states.update({
@@ -443,9 +443,9 @@ class SobitProBalance(VecTask):
         # Overwrite move_base init pos (no noise)
         pos[:, 5:] = self.robot_default_dof_pos[5:]
             
-        # Reset the internal obs accordingly
+        # Set any position control to the current position, and any vel control to be 0
         self._dof_positions[env_ids, :] = pos
-        self._dof_velocities[env_ids, :] = torch.zeros_like(self._dof_velocities[env_ids])
+        self._dof_velocities[env_ids, :] = torch.zeros_like(pos)
         # TODO set velocity!!!!!!!!!!
 
         # Set any position control to the current position, and any vel / effort control to be 0
@@ -569,7 +569,7 @@ class SobitProBalance(VecTask):
         self.actions = _actions.clone().to(self.device)
 
         actuated_idx = torch.LongTensor([0,1,2,3,4])
-        # base_idx = torch.LongTensor([6,8,10,12])
+        base_idx = torch.LongTensor([6,8,10,12])
 
         # update position targets from actions
         self._dof_position_targets[..., actuated_idx] += self.dt * self.action_speed_scale * self.actions
