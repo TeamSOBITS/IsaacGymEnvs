@@ -33,6 +33,7 @@ from .anymal_terrain import AnymalTerrain
 from .ball_balance import BallBalance
 from .cartpole import Cartpole 
 from .sobit_pro import SobitPro 
+from .sobit_pro_balance import SobitProBalance
 from .factory.factory_task_gears import FactoryTaskGears
 from .factory.factory_task_insertion import FactoryTaskInsertion
 from .factory.factory_task_nut_bolt_pick import FactoryTaskNutBoltPick
@@ -57,6 +58,7 @@ isaacgym_task_map = {
     "BallBalance": BallBalance,
     "Cartpole": Cartpole,
     "SobitPro": SobitPro,
+    "SobitProBalance": SobitProBalance,
     "FactoryTaskGears": FactoryTaskGears,
     "FactoryTaskInsertion": FactoryTaskInsertion,
     "FactoryTaskNutBoltPick": FactoryTaskNutBoltPick,

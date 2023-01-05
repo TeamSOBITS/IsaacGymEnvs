@@ -25,6 +25,7 @@ params:
       units: [256, 128, 64]
       # units: [512, 256, 128]
       activation: elu
+      d2rl: False
       
       initializer:
         name: default
@@ -42,36 +43,31 @@ params:
     mixed_precision: False
     normalize_input: True
     normalize_value: True
-    value_bootstrap: True #fran
+    value_bootstrap: True
     num_actors: ${....task.env.numEnvs}
     reward_shaper:
       scale_value: 1.0
-      # scale_value: 0.1 # ori
     normalize_advantage: True
     gamma: 0.99
     tau: 0.95
-    # learning_rate: 3e-4
-    learning_rate: 5e-4 # fran
+    learning_rate: 5e-4
     lr_schedule: adaptive
-    schedule_type: standard #fran
+    schedule_type: standard
     kl_threshold: 0.008
     score_to_win: 20000
     max_epochs: ${resolve_default:10000,${....max_iterations}}
-    save_best_after: 50
+    save_best_after: 200
     save_frequency: 100
     print_stats: True
     grad_norm: 1.0
     entropy_coef: 0.0
     truncate_grads: True
     e_clip: 0.2
-    # horizon_length: 32
-    # minibatch_size: 512 # batch size = num_envs * horizon_length; minibatch_size = batch_size / num_minibatches
     horizon_length: 32
+    # minibatch_size: 512 # batch size = num_envs * horizon_length; minibatch_size = batch_size / num_minibatches
     minibatch_size: 8192
-    # horizon_length: 32
     # minibatch_size: 16384
     mini_epochs: 5
-    # mini_epochs: 8 # ori
     critic_coef: 4
     clip_value: True
     seq_len: 4
