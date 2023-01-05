@@ -63,15 +63,16 @@
       </geometry>
       <material name="black"/>
     </visual>
-    <collision>
+    <!-- <collision>
       <origin rpy="0.0 0.0 0.0" xyz="0.0 0.0 0.0"/>
       <geometry>
         <mesh filename="/home/sobits/catkin_ws/src/sobit_pro/sobit_pro_description/meshes/body/plate_bottom.stl" scale="0.001 0.001 0.001"/>
       </geometry>
-    </collision>
+    </collision> -->
     <inertial>
       <origin rpy="0.0 0.0 0.0" xyz="0.0 0.0 0.0"/>
-      <mass value="2.7779999999999996"/>
+      <mass value="75.0"/>
+      <!-- <mass value="2.7779999999999996"/> -->
       <inertia ixx="1.0" ixy="0.0" ixz="0.0" iyy="1.0" iyz="0.0" izz="1.0"/>
     </inertial>
   </link>
@@ -90,12 +91,12 @@
       </geometry>
       <material name="black"/>
     </visual>
-    <collision>
+    <!-- <collision>
       <origin rpy="0.0 0.0 0.0" xyz="0.0 0.0 0.0"/>
       <geometry>
         <mesh filename="/home/sobits/catkin_ws/src/sobit_pro/sobit_pro_description/meshes/body/plate_middle.stl" scale="0.001 0.001 0.001"/>
       </geometry>
-    </collision>
+    </collision> -->
     <inertial>
       <origin rpy="0.0 0.0 0.0" xyz="0.0 0.0 0.0"/>
       <mass value="2.508"/>
@@ -117,12 +118,12 @@
       </geometry>
       <material name="black"/>
     </visual>
-    <collision>
+    <!-- <collision>
       <origin rpy="0.0 0.0 1.570796326795" xyz="0.0 0.0 0.0"/>
       <geometry>
         <mesh filename="/home/sobits/catkin_ws/src/sobit_pro/sobit_pro_description/meshes/body/plate_top.stl" scale="0.001 0.001 0.001"/>
       </geometry>
-    </collision>
+    </collision> -->
     <inertial>
       <origin rpy="0.0 0.0 1.570796326795" xyz="0.0 0.0 0.0"/>
       <mass value="0.696"/>
@@ -144,12 +145,12 @@
       </geometry>
       <material name="black"/>
     </visual>
-    <collision>
+    <!-- <collision>
       <origin rpy="1.570796326795 0.0 1.570796326795" xyz="0.0 0.0 0.0"/>
       <geometry>
         <mesh filename="/home/sobits/catkin_ws/src/sobit_pro/sobit_pro_description/meshes/wheel/wheel_base.stl" scale="0.001 0.001 0.001"/>
       </geometry>
-    </collision>
+    </collision> -->
     <inertial>
       <origin rpy="1.570796326795 0.0 1.570796326795" xyz="0.0 0.0 0.0"/>
       <mass value="0.100"/>
@@ -171,12 +172,12 @@
       </geometry>
       <material name="black"/>
     </visual>
-    <collision>
+    <!-- <collision>
       <origin rpy="1.570796326795 0.0 1.570796326795" xyz="0.0 0.0 0.0"/>
       <geometry>
         <mesh filename="/home/sobits/catkin_ws/src/sobit_pro/sobit_pro_description/meshes/wheel/wheel_base.stl" scale="0.001 0.001 0.001"/>
       </geometry>
-    </collision>
+    </collision> -->
     <inertial>
       <origin rpy="1.570796326795 0.0 1.570796326795" xyz="0.0 0.0 0.0"/>
       <mass value="0.100"/>
@@ -198,12 +199,12 @@
       </geometry>
       <material name="black"/>
     </visual>
-    <collision>
+    <!-- <collision>
       <origin rpy="1.570796326795 0.0 1.570796326795" xyz="0.0 0.0 0.0"/>
       <geometry>
         <mesh filename="/home/sobits/catkin_ws/src/sobit_pro/sobit_pro_description/meshes/wheel/wheel_base.stl" scale="0.001 0.001 0.001"/>
       </geometry>
-    </collision>
+    </collision> -->
     <inertial>
       <origin rpy="1.570796326795 0.0 1.570796326795" xyz="0.0 0.0 0.0"/>
       <mass value="0.100"/>
@@ -225,12 +226,12 @@
       </geometry>
       <material name="black"/>
     </visual>
-    <collision>
+    <!-- <collision>
       <origin rpy="1.570796326795 0.0 1.570796326795" xyz="0.0 0.0 0.0"/>
       <geometry>
         <mesh filename="/home/sobits/catkin_ws/src/sobit_pro/sobit_pro_description/meshes/wheel/wheel_base.stl" scale="0.001 0.001 0.001"/>
       </geometry>
-    </collision>
+    </collision> -->
     <inertial>
       <origin rpy="1.570796326795 0.0 1.570796326795" xyz="0.0 0.0 0.0"/>
       <mass value="0.100"/>
@@ -255,12 +256,12 @@
       </geometry>
       <material name="black"/>
     </visual>
-    <collision>
+    <!-- <collision>
       <origin rpy="1.570796326795 0.0 1.570796326795" xyz="0.0 0.0 0.0"/>
       <geometry>
         <mesh filename="/home/sobits/catkin_ws/src/sobit_pro/sobit_pro_description/meshes/wheel/wheel_steer.stl" scale="0.001 0.001 0.001"/>
       </geometry>
-    </collision>
+    </collision> -->
     <inertial>
       <origin rpy="1.570796326795 0.0 1.570796326795" xyz="0.0 0.0 0.0"/>
       <mass value="0.299"/>
@@ -285,12 +286,12 @@
       </geometry>
       <material name="black"/>
     </visual>
-    <collision>
+    <!-- <collision>
       <origin rpy="1.570796326795 0.0 1.570796326795" xyz="0.0 0.0 0.0"/>
       <geometry>
         <mesh filename="/home/sobits/catkin_ws/src/sobit_pro/sobit_pro_description/meshes/wheel/wheel_steer.stl" scale="0.001 0.001 0.001"/>
       </geometry>
-    </collision>
+    </collision> -->
     <inertial>
       <origin rpy="1.570796326795 0.0 1.570796326795" xyz="0.0 0.0 0.0"/>
       <mass value="0.299"/>
@@ -315,12 +316,12 @@
       </geometry>
       <material name="black"/>
     </visual>
-    <collision>
+    <!-- <collision>
       <origin rpy="1.570796326795 0.0 1.570796326795" xyz="0.0 0.0 0.0"/>
       <geometry>
         <mesh filename="/home/sobits/catkin_ws/src/sobit_pro/sobit_pro_description/meshes/wheel/wheel_steer.stl" scale="0.001 0.001 0.001"/>
       </geometry>
-    </collision>
+    </collision> -->
     <inertial>
       <origin rpy="1.570796326795 0.0 1.570796326795" xyz="0.0 0.0 0.0"/>
       <mass value="0.299"/>
@@ -345,12 +346,12 @@
       </geometry>
       <material name="black"/>
     </visual>
-    <collision>
+    <!-- <collision>
       <origin rpy="1.570796326795 0.0 1.570796326795" xyz="0.0 0.0 0.0"/>
       <geometry>
         <mesh filename="/home/sobits/catkin_ws/src/sobit_pro/sobit_pro_description/meshes/wheel/wheel_steer.stl" scale="0.001 0.001 0.001"/>
       </geometry>
-    </collision>
+    </collision> -->
     <inertial>
       <origin rpy="1.570796326795 0.0 1.570796326795" xyz="0.0 0.0 0.0"/>
       <mass value="0.299"/>
@@ -550,12 +551,12 @@
       </geometry>
       <material name="black"/>
     </visual>
-    <collision>
+    <!-- <collision>
       <origin rpy="1.570796326795 0.0 1.570796326795" xyz="0.0 0.0 0.0"/>
       <geometry>
         <mesh filename="/home/sobits/catkin_ws/src/sobit_pro/sobit_pro_description/meshes/head/head_camera_base.stl" scale="0.001 0.001 0.001"/>
       </geometry>
-    </collision>
+    </collision> -->
     <inertial>
       <origin rpy="1.570796326795 0.0 1.570796326795" xyz="0.0 0.0 0.0"/>
       <mass value="0.100"/>
@@ -580,12 +581,12 @@
       </geometry>
       <material name="black"/>
     </visual>
-    <collision>
+    <!-- <collision>
       <origin rpy="0.0 0.0 1.570796326795" xyz="0.0 0.0 0.0"/>
       <geometry>
         <mesh filename="/home/sobits/catkin_ws/src/sobit_pro/sobit_pro_description/meshes/head/head_camera_pan.stl" scale="0.001 0.001 0.001"/>
       </geometry>
-    </collision>
+    </collision> -->
     <inertial>
       <origin rpy="0.0 0.0 1.570796326795" xyz="0.0 0.0 0.0"/>
       <mass value="0.090"/>
@@ -637,13 +638,13 @@
       </geometry>
       <material name="black"/>
     </visual>
-    <collision>
+    <!-- <collision>
       <origin rpy="1.570796326795 0.0 3.14159265359" xyz="0.0 0.0 0.0"/>
       <geometry>
         <mesh filename="/home/sobits/catkin_ws/src/sobit_pro/sobit_pro_description/meshes/sensor/mic_base.stl" scale="0.001 0.001 0.001"/>
       </geometry>
       <material name="black"/>
-    </collision>
+    </collision> -->
     <inertial>
       <origin rpy="1.570796326795 0.0 3.14159265359" xyz="0.0 0.0 0.0"/>
       <mass value="0.100"/>
@@ -665,13 +666,13 @@
       </geometry>
       <material name="black"/>
     </visual>
-    <collision>
+    <!-- <collision>
       <origin rpy="1.570796326795 0.0 3.14159265359" xyz="0.0 0.0 0.0"/>
       <geometry>
         <mesh filename="/home/sobits/catkin_ws/src/sobit_pro/sobit_pro_description/meshes/sensor/mic.stl" scale="0.001 0.001 0.001"/>
       </geometry>
       <material name="black"/>
-    </collision>
+    </collision> -->
     <inertial>
       <origin rpy="1.570796326795 0.0 3.14159265359" xyz="0.0 0.0 0.0"/>
       <mass value="0.272"/>
@@ -1130,12 +1131,12 @@
       </geometry>
       <material name="black"/>
     </visual>
-    <collision>
+    <!-- <collision>
       <origin rpy="1.570796326795 0.0 3.14159265359" xyz="0.0 0.0 0.0"/>
       <geometry>
         <mesh filename="/home/sobits/catkin_ws/src/sobit_pro/sobit_pro_description/meshes/sensor/lidar_base.stl" scale="0.001 0.001 0.001"/>
       </geometry>
-    </collision>
+    </collision> -->
     <inertial>
       <origin rpy="1.570796326795 0.0 3.14159265359" xyz="0.0 0.0 0.0"/>
       <mass value="0.08"/>
@@ -1196,12 +1197,12 @@
         <mesh filename="/home/sobits/catkin_ws/src/azure_kinect_ros_driver/meshes/akdk_camera.dae"/>
       </geometry>
     </visual>
-    <collision>
+    <!-- <collision>
       <origin rpy="0.0 0.0 0.0" xyz="0.0 0.0 0.0"/>
       <geometry>
         <mesh filename="/home/sobits/catkin_ws/src/azure_kinect_ros_driver/meshes/akdk_camera.dae"/>
       </geometry>
-    </collision>
+    </collision> -->
     <inertial>
       <origin rpy="0.0 0.0 0.0" xyz="0.0 0.0 0.0"/>
       <mass value="0.08"/>
@@ -1313,12 +1314,12 @@
         <!-- <mesh filename="/home/sobits/catkin_ws/src/realsense_ros/realsense2_description/meshes/l515.dae"/> -->
       </geometry>
     </visual>
-    <collision>
+    <!-- <collision>
       <origin rpy="1.5707963267948966 0 1.5707963267948966" xyz="-0.0085 0 0.009000000000000001"/>
       <geometry>
         <cylinder length="0.026" radius="0.0305"/>
       </geometry>
-    </collision>
+    </collision> -->
     <inertial>
       <!-- The following are not reliable values, and should not be used for modeling -->
       <!-- calculated assuming full cylinder as described here: https://en.wikipedia.org/wiki/List_of_moments_of_inertia -->
