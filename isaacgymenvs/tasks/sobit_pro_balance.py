@@ -197,8 +197,8 @@ class SobitProBalance(VecTask):
         self.gym.add_ground(self.sim, plane_params)
 
     def _create_envs(self, num_envs, spacing, num_per_row):
-        env_lower = gymapi.Vec3(-spacing, -spacing, 0.0)
-        env_upper = gymapi.Vec3(spacing, spacing, spacing)
+        env_lower = gymapi.Vec3(-spacing, -spacing/spacing, 0.0)
+        env_upper = gymapi.Vec3(spacing, spacing/spacing, spacing)
 
         asset_root = os.path.join(os.path.dirname(os.path.abspath(__file__)), "../../assets")
         asset_file = "urdf/sobit_pro_tray_new.urdf"
@@ -214,9 +214,10 @@ class SobitProBalance(VecTask):
         robot_opts.collapse_fixed_joints = False
         robot_opts.disable_gravity = False
         robot_opts.thickness = 0.001
-        robot_opts.default_dof_drive_mode = gymapi.DOF_MODE_EFFORT
+        robot_opts.default_dof_drive_mode = gymapi.DOF_MODE_POS
         robot_opts.use_mesh_materials = True
-        robot_opts.slices_per_cylinder = 40
+        # robot_opts.slices_per_cylinder = 40
+        robot_opts.replace_cylinder_with_capsule = True
         robot_asset = self.gym.load_asset(self.sim, asset_root, asset_file, robot_opts)
 
         robot_dof_stiffness = to_torch([1000., 1000., 1000., 1000., 1000., 1000., 0., 1000., 0., 1000., 0., 1000., 0.], dtype=torch.float, device=self.device)
@@ -225,23 +226,26 @@ class SobitProBalance(VecTask):
         # Objects size
         self.cubeA_size = 0.050
         self.cubeB_size = 0.070
-        self.ball_size = 0.05
+        self.ball_size = 0.030
 
 
         # Create ball asset
         ball_opts  = gymapi.AssetOptions()
+        ball_opts.density  = 1.0
         ball_asset = self.gym.create_sphere(self.sim, self.ball_size, ball_opts)
-        ball_color = gymapi.Vec3(0.0, 0.8, 0.1)
+        ball_color = gymapi.Vec3(1.0, 0.0, 0.0)
 
         # Create cubeA asset
         cubeA_opts  = gymapi.AssetOptions()
-        cubeA_asset = self.gym.create_box(self.sim, *([self.cubeA_size] * 3), cubeA_opts)
-        cubeA_color = gymapi.Vec3(0.6, 0.1, 0.0)
+        cubeA_opts.density  = 1.0
+        cubeA_asset = self.gym.create_box(self.sim, self.cubeA_size,self.cubeA_size,2*self.cubeA_size, cubeA_opts)
+        cubeA_color = gymapi.Vec3(1.0, 1.0, 0.0)
 
         # Create cubeB asset
         cubeB_opts  = gymapi.AssetOptions()
+        cubeB_opts.density  = 1.0
         cubeB_asset = self.gym.create_box(self.sim, *([self.cubeB_size] * 3), cubeB_opts)
-        cubeB_color = gymapi.Vec3(0.0, 0.1, 0.7)
+        cubeB_color = gymapi.Vec3(0.0, 0.0, 1.0)
 
 
         self.num_robot_bodies = self.gym.get_asset_rigid_body_count(robot_asset)
@@ -255,9 +259,11 @@ class SobitProBalance(VecTask):
         self.robot_dof_lower_limits  = []
         self.robot_dof_upper_limits  = []
         self.robot_dof_effort_limits = []
+        robot_dof_props['driveMode'][:] = gymapi.DOF_MODE_POS
+        robot_dof_props['driveMode'][6::2] = gymapi.DOF_MODE_VEL
+
 
         for i in range(self.num_robot_dofs):
-            robot_dof_props['driveMode'][i] = gymapi.DOF_MODE_POS if i > 4 else gymapi.DOF_MODE_EFFORT
 
             robot_dof_props['stiffness'][i] = robot_dof_stiffness[i]
             robot_dof_props['damping'][i]   = robot_dof_damping[i]
@@ -278,7 +284,7 @@ class SobitProBalance(VecTask):
         robot_start_pose.r = gymapi.Quat(0.0, 0.0, 0.0, 1.0)
 
         # Tray start pose
-        tray_pos = [0.944, 0.0, 0.90]
+        tray_pos = [0.95, 0.0, 0.90]
         self._tray_surface_pos = np.array(tray_pos)
 
         # Define start pose for elements (doesn't really matter since they're get overridden during reset() anyways)
@@ -315,13 +321,13 @@ class SobitProBalance(VecTask):
                 new_dof_positionsuat = axisangle2quat(rand_rot).squeeze().numpy().tolist()
                 robot_start_pose.r = gymapi.Quat(*new_dof_positionsuat)
             
-            self._robot_id = self.gym.create_actor(env_ptr, robot_asset, robot_start_pose, "robot", i, 0, 0)
+            self._robot_id = self.gym.create_actor(env_ptr, robot_asset, robot_start_pose, "robot", i, -1, 0)
             self.gym.set_actor_dof_properties(env_ptr, self._robot_id, robot_dof_props)
 
             # Create cubes
-            self._ball_id  = self.gym.create_actor(env_ptr, ball_asset, ball_start_pose, "ball", i, 1, 0)
-            self._cubeA_id = self.gym.create_actor(env_ptr, cubeA_asset, cubeA_start_pose, "cubeA", i, 2, 0)
-            self._cubeB_id = self.gym.create_actor(env_ptr, cubeB_asset, cubeB_start_pose, "cubeB", i, 3, 0)
+            self._ball_id  = self.gym.create_actor(env_ptr, ball_asset, ball_start_pose, "ball", i, -1, 0)
+            self._cubeA_id = self.gym.create_actor(env_ptr, cubeA_asset, cubeA_start_pose, "cubeA", i, -1, 0)
+            self._cubeB_id = self.gym.create_actor(env_ptr, cubeB_asset, cubeB_start_pose, "cubeB", i, -1, 0)
             # Set colors
             self.gym.set_rigid_body_color(env_ptr, self._ball_id, 0, gymapi.MESH_VISUAL, ball_color)
             self.gym.set_rigid_body_color(env_ptr, self._cubeA_id, 0, gymapi.MESH_VISUAL, cubeA_color)
@@ -395,8 +401,12 @@ class SobitProBalance(VecTask):
 
         # Initialize control
         self._arm_control   = self._effort_control[:, :5]
+        self._arm_control   = self._pos_control[:, :5]
         self._steer_control = self._pos_control[:, 5::2]
         self._wheel_control = self._vel_control[:, 6::2]
+
+        # Initialize buffers
+        self.extras = {}
 
         # Initialize indices
         self._global_indices = torch.arange(self.num_envs * 4, dtype=torch.int32,
@@ -496,8 +506,8 @@ class SobitProBalance(VecTask):
 
         # Reset elements and robot positions
         self._reset_init_elem_state(elem='ball' , env_ids=env_ids, check_valid=False)
+        self._reset_init_elem_state(elem='cubeA', env_ids=env_ids, check_valid=True)
         self._reset_init_elem_state(elem='cubeB', env_ids=env_ids, check_valid=False)
-        self._reset_init_elem_state(elem='cubeA', env_ids=env_ids, check_valid=False)
 
         # Write these new init states to the sim states
         self._robot_state[env_ids] = self._init_robot_state[env_ids]
@@ -523,7 +533,7 @@ class SobitProBalance(VecTask):
         # NOTE: Task takes care of actually propagating these controls in sim using the SimActions API
         self._pos_control[env_ids, :] = robot_reset_dof_pos
         self._vel_control[env_ids, :] = torch.zeros_like(robot_reset_dof_pos)
-        self._effort_control[env_ids, :] = torch.zeros_like(robot_reset_dof_pos)
+        # self._effort_control[env_ids, :] = torch.zeros_like(robot_reset_dof_pos)
 
         # Deploy updates
         multi_env_ids_int32 = self._global_indices[env_ids, 0].flatten()
@@ -535,10 +545,10 @@ class SobitProBalance(VecTask):
                                                         gymtorch.unwrap_tensor(self._vel_control),
                                                         gymtorch.unwrap_tensor(multi_env_ids_int32),
                                                         len(multi_env_ids_int32))
-        self.gym.set_dof_actuation_force_tensor_indexed(self.sim,
-                                                        gymtorch.unwrap_tensor(self._effort_control),
-                                                        gymtorch.unwrap_tensor(multi_env_ids_int32),
-                                                        len(multi_env_ids_int32))
+        # self.gym.set_dof_actuation_force_tensor_indexed(self.sim,
+        #                                                 gymtorch.unwrap_tensor(self._effort_control),
+        #                                                 gymtorch.unwrap_tensor(multi_env_ids_int32),
+        #                                                 len(multi_env_ids_int32))
         self.gym.set_dof_state_tensor_indexed(self.sim,
                                               gymtorch.unwrap_tensor(self._dof_state),
                                               gymtorch.unwrap_tensor(multi_env_ids_int32),
@@ -580,31 +590,33 @@ class SobitProBalance(VecTask):
             this_elem_state_all = self._init_ball_state
             other_elem1_state = self._init_cubeA_state[env_ids, :]
             other_elem2_state = self._init_cubeB_state[env_ids, :]
-            elem_heights = self.states["ball_size"]
+            elem_heights = self.states["ball_size"].squeeze(-1)[env_ids]
         elif elem.lower() == 'cubea':
             this_elem_state_all = self._init_cubeA_state
             other_elem1_state = self._init_ball_state[env_ids, :]
             other_elem2_state = self._init_cubeB_state[env_ids, :]
-            elem_heights = self.states["cubeA_size"] / 2
+            elem_heights = self.states["cubeA_size"].squeeze(-1)[env_ids] / 2
         elif elem.lower() == 'cubeb':
             this_elem_state_all = self._init_cubeB_state
             other_elem1_state = self._init_ball_state[env_ids, :]
             other_elem2_state = self._init_cubeA_state[env_ids, :]
-            elem_heights = self.states["cubeB_size"] / 2
+            elem_heights = self.states["cubeB_size"].squeeze(-1)[env_ids] / 2
         else:
             raise ValueError(f"Invalid cube specified, options are 'ball', 'cubeA' and 'cubeB'; got: {elem}")
 
         # Minimum cube distance for guarenteed collision-free sampling is the sum of each cube's effective radius
-        min_dists = (self.states["cubeA_size"] + self.states["cubeB_size"])[env_ids] * np.sqrt(2) / 2.0
+        min_1_dists = (self.states["cubeA_size"] + self.states["ball_size"])[env_ids] / 3.0
+        min_2_dists = (self.states["cubeA_size"] + self.states["cubeB_size"])[env_ids] / 3.0
 
         # We scale the min dist by 2 so that the cubes aren't too close together
-        min_dists = min_dists * 2.0
+        min_1_dists = min_1_dists * 2.0
+        min_2_dists = min_2_dists * 2.0
 
         # Sampling is "centered" around middle of table
         centered_elem_xy_state = torch.tensor(self._tray_surface_pos[:2], device=self.device, dtype=torch.float32)
 
         # Set z value, which is fixed height
-        sampled_elem_state[:, 2] = self._tray_surface_pos[2] + elem_heights.squeeze(-1)[env_ids]
+        sampled_elem_state[:, 2] = self._tray_surface_pos[2] + elem_heights
 
         # Initialize rotation, which is no rotation (quat w = 1)
         sampled_elem_state[:, 6] = 1.0
@@ -623,9 +635,14 @@ class SobitProBalance(VecTask):
                                                      2.0 * self.start_position_noise * (
                                                              torch.rand_like(sampled_elem_state[active_idx, :2]) - 0.5)
                 # Check if sampled values are valid
-                cube_dist = torch.linalg.norm(sampled_elem_state[:, :2] - other_elem1_state[:, :2], dim=-1)
-                active_idx = torch.nonzero(cube_dist < min_dists, as_tuple=True)[0]
-                num_active_idx = len(active_idx)
+                cube_to_ball_dist = torch.linalg.norm(sampled_elem_state[:, :2] - other_elem1_state[:, :2], dim=-1)
+                cube_to_cube_dist = torch.linalg.norm(sampled_elem_state[:, :2] - other_elem2_state[:, :2], dim=-1)
+                active_1_idx = torch.nonzero(cube_to_ball_dist < min_1_dists, as_tuple=True)[0]
+                active_2_idx = torch.nonzero((cube_to_cube_dist < min_2_dists) & (cube_to_ball_dist < min_1_dists), as_tuple=True)[0]
+                if elem.lower() == 'cubea':
+                    num_active_idx = len(active_1_idx)
+                elif elem.lower() == 'cubeb':
+                    num_active_idx = len(active_1_idx) + len(active_2_idx)
                 # If active idx is empty, then all sampling is valid :D
                 if num_active_idx == 0:
                     success = True
@@ -635,7 +652,7 @@ class SobitProBalance(VecTask):
         else:
             # We just directly sample
             sampled_elem_state[:, :2] = centered_elem_xy_state.unsqueeze(0) + \
-                                              1.0 * self.start_position_noise * (
+                                              2.0 * self.start_position_noise * (
                                                       torch.rand(num_resets, 2, device=self.device) - 0.5)
 
         # Sample rotation value
@@ -651,14 +668,19 @@ class SobitProBalance(VecTask):
         self.actions = actions.clone().to(self.device)
 
         # Split arm and gripper command
-        u_arm = self.actions[:, :5]
+        # u_arm = self.actions[:, :5]
+
+        u_arm = self.dt * self.action_scale * self.actions
 
         # print(u_arm, u_gripper)
         # print(self.cmd_limit, self.action_scale)
 
         # Control arm (scale value first)
-        u_arm = u_arm * self.cmd_limit / self.action_scale
+        # u_arm = u_arm * self.cmd_limit / self.action_scale
+        # self._arm_control[:, :] = u_arm
         self._arm_control[:, :] = u_arm
+        self._arm_control[:, :] = tensor_clamp(self._arm_control.unsqueeze(0), 
+                                            self.robot_dof_lower_limits[:5].unsqueeze(0), self.robot_dof_upper_limits[:5].unsqueeze(0))
         # self._arm_control[:, :] = torch.zeros_like(self._arm_control[:, :])
 
         # Control gripper
@@ -669,7 +691,7 @@ class SobitProBalance(VecTask):
         # Deploy actions
         self.gym.set_dof_position_target_tensor(self.sim, gymtorch.unwrap_tensor(self._pos_control))
         self.gym.set_dof_velocity_target_tensor(self.sim, gymtorch.unwrap_tensor(self._vel_control))
-        self.gym.set_dof_actuation_force_tensor(self.sim, gymtorch.unwrap_tensor(self._effort_control))
+        # self.gym.set_dof_actuation_force_tensor(self.sim, gymtorch.unwrap_tensor(self._effort_control))
 
     def post_physics_step(self):
         self.progress_buf += 1
@@ -785,6 +807,7 @@ def compute_robot_reward(
 
     reset = torch.where(progress_buf >= max_episode_length - 1, torch.ones_like(reset_buf), reset_buf)
     # reset = torch.where((states["ball_to_base_pos"][:, 2] < states["tray_pos"][:, 2]) | (states["ball_pos_to_base"][:, 2] > states["tray_pos"][:, 2]+states["ball_size"][:]+0.05), torch.ones_like(reset_buf), reset)
-    reset = torch.where(states["ball_to_base_pos"][:, 2] < states["tray_to_base_pos"][:, 2], torch.ones_like(reset_buf), reset)
+    reset = torch.where((states["ball_to_base_pos"][:, 2] < states["tray_to_base_pos"][:, 2])|(states["cubeA_to_base_pos"][:, 2] < states["tray_to_base_pos"][:, 2])|(states["cubeB_to_base_pos"][:, 2] < states["tray_to_base_pos"][:, 2]), torch.ones_like(reset_buf), reset)
+
 
     return reward, reset

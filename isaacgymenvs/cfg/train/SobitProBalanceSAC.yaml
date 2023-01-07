@@ -1,0 +1,76 @@
+params:
+  seed: ${...seed}
+
+  algo:
+    name: sac
+
+  model:
+    name: soft_actor_critic
+
+  network:
+    name: soft_actor_critic
+    separate: True
+    space:
+      continuous:
+    mlp:
+      # units: [256, 128, 64] # sac 1-2
+      units: [512, 256, 128]
+      d2rl: False
+      activation: relu
+      initializer:
+        name: default
+
+    log_std_bounds: [-5, 2]
+
+  load_checkpoint: ${if:${...checkpoint},True,False} # flag which sets whether to load the checkpoint
+  load_path: ${...checkpoint} # path to the checkpoint to load
+
+  config:
+    name: ${resolve_default:SobitProBalance,${....experiment}}
+    full_experiment_name: ${.name}
+    env_name: rlgpu
+    # ppo: True
+    mixed_precision: False
+    normalize_input: True
+    # normalize_value: True
+    # value_bootstrap: True
+    num_actors: ${....task.env.numEnvs}
+    reward_shaper:
+      scale_value: 1.0
+    # normalize_advantage: True
+    gamma: 0.99
+    # tau: 0.95
+
+    init_alpha: 1
+    alpha_lr: 0.005
+    actor_lr: 0.0005
+    critic_lr: 0.0005
+    critic_tau: 0.005
+    batch_size: 1024
+    learnable_temperature: True
+    num_warmup_steps: 16
+    # num_seed_steps: 5
+    replay_buffer_size: 1000000 # sac1-2
+
+    # learning_rate: 5e-4
+    # lr_schedule: adaptive
+    # schedule_type: standard
+    # kl_threshold: 0.008
+    # score_to_win: 20000
+    max_epochs: ${resolve_default:100000,${....max_iterations}}
+    save_best_after: 200
+    save_frequency: 1000
+    print_stats: True
+    # grad_norm: 1.0
+    # entropy_coef: 0.0
+    # truncate_grads: True
+    # e_clip: 0.2
+    # horizon_length: 32
+    # minibatch_size: 512 # batch size = num_envs * horizon_length; minibatch_size = batch_size / num_minibatches
+    # minibatch_size: 8192
+    # minibatch_size: 16384
+    # mini_epochs: 5
+    # critic_coef: 4
+    # clip_value: True
+    # seq_len: 4
+    # bounds_loss_coef: 0.0001

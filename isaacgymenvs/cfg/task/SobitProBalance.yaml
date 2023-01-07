@@ -5,18 +5,18 @@ physics_engine: ${..physics_engine}
 
 # if given, will override the device setting in gym.
 env:
-  # numEnvs: ${resolve_default:128,${...num_envs}}
-  numEnvs: ${resolve_default:4096,${...num_envs}}
-  # numEnvs: ${resolve_default:8192,${...num_envs}}
-  envSpacing: 1.5
+  numEnvs: ${resolve_default:32,${...num_envs}} #sac (~300)
+  # numEnvs: ${resolve_default:128,${...num_envs}} #sac1-2
+  # numEnvs: ${resolve_default:4096,${...num_envs}} #ppo
+  envSpacing: 5.0
   maxEpisodeLength: 500
-  actionSpeedScale: 1
+  actionSpeedScale: 20
   enableDebugVis: False
 
   clipObservations: 5.0
   clipActions: 1.0
 
-  startPositionNoise: 0.25
+  startPositionNoise: 0.15
   startRotationNoise: 0.0
 
   robotPositionNoise: 0.0
