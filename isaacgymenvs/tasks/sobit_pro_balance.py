@@ -470,7 +470,7 @@ class SobitProBalance(VecTask):
         self._update_states()
 
     def compute_reward(self, actions):
-        self.rew_buf[:], self.reset_buf[:] = compute_robot_reward(
+        self.rew_buf[:], self.reset_buf[:], self.vel[:] = compute_robot_reward(
             self.states,
             self.reset_buf, self.progress_buf, self.actions, self.max_episode_length
         )
@@ -562,6 +562,7 @@ class SobitProBalance(VecTask):
 
         self.progress_buf[env_ids] = 0
         self.reset_buf[env_ids] = 0
+        self.vel[env_ids] = 0
 
     def _reset_init_elem_state(self, elem, env_ids, check_valid=True):
         """
@@ -681,7 +682,7 @@ class SobitProBalance(VecTask):
         self._arm_control[:, :] = u_arm
         self._arm_control[:, :] = tensor_clamp(self._arm_control.unsqueeze(0), 
                                             self.robot_dof_lower_limits[:5].unsqueeze(0), self.robot_dof_upper_limits[:5].unsqueeze(0))
-        # self._arm_control[:, :] = torch.zeros_like(self._arm_control[:, :])
+        self._arm_control[:, :] = torch.zeros_like(self._arm_control[:, :])
 
         # Control gripper
         # Write gripper command to appropriate tensor buffer
@@ -739,75 +740,80 @@ class SobitProBalance(VecTask):
 def compute_robot_reward(
     states, reset_buf, progress_buf, actions, max_episode_length
 ):
-    # type: (Dict[str, Tensor], Tensor, Tensor, Tensor, float) -> Tuple[Tensor, Tensor]
+    # type: (Dict[str, Tensor], Tensor, Tensor, Tensor, float) -> Tuple[Tensor, Tensor, Tensor]
 
-    # calculating the norm for ball distance to desired height above the ground plane (i.e. 0.7)
-    # ball_pos = np.zeros(states["ball_pos"].size(), dtype=gymapi.Transform.dtype)
-    # ball_pos = ((states["ball_pos"]), (states["ball_quat"]))
-    # ball_pos = states["tray_quat"].transform_points(states["ball_pos"])
-
-    # ball_dist = torch.sqrt((states["ball_pos"][:, 0] - 0.944) * (states["ball_pos"][:, 0] - 0.944) +
-    #                        (states["ball_pos"][:, 1]) * (states["ball_pos"][:, 1]) +
-    #                        (states["ball_pos"][:, 2] - 0.89) * (states["ball_pos"][:, 2] - 0.89))
+    # calculating the norm for ball distance to desired height above the ground plane (i.e. 0.944)
+    # ball_pos = torch.sqrt((states["ball_to_base_pos"][:, 0]-0.944) * (states["ball_to_base_pos"][:, 0]-0.944) +
+    #                       (states["ball_to_base_pos"][:, 1]) * (states["ball_to_base_pos"][:, 1]) +
+    #                       (states["ball_to_base_pos"][:, 2]-states["ball_size"][:]-0.89) * (states["ball_to_base_pos"][:, 2]-states["ball_size"][:]-0.89))
+    # ball_quat = torch.sqrt(states["ball_quat"][:, 0] * states["ball_quat"][:, 0] +
+    #                        states["ball_quat"][:, 1] * states["ball_quat"][:, 1] +
+    #                        states["ball_quat"][:, 2] * states["ball_quat"][:, 2])
     ball_pos = torch.sqrt((states["ball_to_base_pos"][:, 0]-0.944) * (states["ball_to_base_pos"][:, 0]-0.944) +
-                           (states["ball_to_base_pos"][:, 1]) * (states["ball_to_base_pos"][:, 1]) +
-                           (states["ball_to_base_pos"][:, 2]-states["ball_size"][:]-0.89) * (states["ball_to_base_pos"][:, 2]-states["ball_size"][:]-0.89))
-    ball_speed = torch.sqrt(states["ball_linvel"][:, 0] * states["ball_linvel"][:, 0] +
-                            states["ball_linvel"][:, 1] * states["ball_linvel"][:, 1] +
-                            states["ball_linvel"][:, 2] * states["ball_linvel"][:, 2])
+                          (states["ball_to_base_pos"][:, 1]) * (states["ball_to_base_pos"][:, 1]) +
+                          (states["ball_to_base_pos"][:, 2]-states["ball_size"][:]-0.89) * (states["ball_to_base_pos"][:, 2]-states["ball_size"][:]-0.89) + 
+                           states["ball_quat"][:, 0] * states["ball_quat"][:, 0] +
+                           states["ball_quat"][:, 1] * states["ball_quat"][:, 1] +
+                           states["ball_quat"][:, 2] * states["ball_quat"][:, 2])
+    ball_speed = torch.sqrt((states["ball_linvel"][:, 0]-states["base_linvel"][:, 0]) * (states["ball_linvel"][:, 0]-states["base_linvel"][:, 0]) +
+                            (states["ball_linvel"][:, 1]-states["base_linvel"][:, 1]) * (states["ball_linvel"][:, 1]-states["base_linvel"][:, 1]) +
+                            (states["ball_linvel"][:, 2]-states["base_linvel"][:, 2]) * (states["ball_linvel"][:, 2]-states["base_linvel"][:, 2]))
 
+    # cubeA_pos = torch.sqrt((states["cubeA_to_base_pos"][:, 0]-0.944) * (states["cubeA_to_base_pos"][:, 0]-0.944) +
+    #                        (states["cubeA_to_base_pos"][:, 1]) * (states["cubeA_to_base_pos"][:, 1]) +
+    #                        (states["cubeA_to_base_pos"][:, 2]-states["cubeA_size"][:]/2.-0.89) * (states["cubeA_to_base_pos"][:, 2]-states["cubeA_size"][:]/2.-0.89))
+    # cubeA_quat = torch.sqrt(states["cubeA_quat"][:, 0] * states["cubeA_quat"][:, 0] +
+    #                         states["cubeA_quat"][:, 1] * states["cubeA_quat"][:, 1] +
+    #                         states["cubeA_quat"][:, 2] * states["cubeA_quat"][:, 2])
     cubeA_pos = torch.sqrt((states["cubeA_to_base_pos"][:, 0]-0.944) * (states["cubeA_to_base_pos"][:, 0]-0.944) +
                            (states["cubeA_to_base_pos"][:, 1]) * (states["cubeA_to_base_pos"][:, 1]) +
-                           (states["cubeA_to_base_pos"][:, 2]-states["ball_size"][:]-0.89) * (states["cubeA_to_base_pos"][:, 2]-states["ball_size"][:]-0.89))
-    cubeA_quat = torch.sqrt(states["cubeA_quat"][:, 0] * states["cubeA_quat"][:, 0] +
+                           (states["cubeA_to_base_pos"][:, 2]-states["cubeA_size"][:]/2.-0.89) * (states["cubeA_to_base_pos"][:, 2]-states["cubeA_size"][:]/2.-0.89) + 
+                            states["cubeA_quat"][:, 0] * states["cubeA_quat"][:, 0] +
                             states["cubeA_quat"][:, 1] * states["cubeA_quat"][:, 1] +
                             states["cubeA_quat"][:, 2] * states["cubeA_quat"][:, 2])
-    cubeA_speed = torch.sqrt(states["cubeA_linvel"][:, 0] * states["cubeA_linvel"][:, 0] +
-                            states["cubeA_linvel"][:, 1] * states["cubeA_linvel"][:, 1] +
-                            states["cubeA_linvel"][:, 2] * states["cubeA_linvel"][:, 2])
+    cubeA_speed = torch.sqrt((states["cubeA_linvel"][:, 0]-states["base_linvel"][:, 0]) * (states["cubeA_linvel"][:, 0]-states["base_linvel"][:, 0]) +
+                             (states["cubeA_linvel"][:, 1]-states["base_linvel"][:, 1]) * (states["cubeA_linvel"][:, 1]-states["base_linvel"][:, 1]) +
+                             (states["cubeA_linvel"][:, 2]-states["base_linvel"][:, 2]) * (states["cubeA_linvel"][:, 2]-states["base_linvel"][:, 2]))
 
+    # cubeB_pos = torch.sqrt((states["cubeB_to_base_pos"][:, 0]-0.944) * (states["cubeB_to_base_pos"][:, 0]-0.944) +
+    #                        (states["cubeB_to_base_pos"][:, 1]) * (states["cubeB_to_base_pos"][:, 1]) +
+    #                        (states["cubeB_to_base_pos"][:, 2]-states["cubeB_size"][:]/2.-0.89) * (states["cubeB_to_base_pos"][:, 2]-states["cubeB_size"][:]/2.-0.89))
+    # cubeB_quat = torch.sqrt(states["cubeB_quat"][:, 0] * states["cubeB_quat"][:, 0] +
+    #                         states["cubeB_quat"][:, 1] * states["cubeB_quat"][:, 1] +
+    #                         states["cubeB_quat"][:, 2] * states["cubeB_quat"][:, 2])
     cubeB_pos = torch.sqrt((states["cubeB_to_base_pos"][:, 0]-0.944) * (states["cubeB_to_base_pos"][:, 0]-0.944) +
                            (states["cubeB_to_base_pos"][:, 1]) * (states["cubeB_to_base_pos"][:, 1]) +
-                           (states["cubeB_to_base_pos"][:, 2]-states["ball_size"][:]-0.89) * (states["cubeB_to_base_pos"][:, 2]-states["ball_size"][:]-0.89))
-    cubeB_quat = torch.sqrt(states["cubeB_quat"][:, 0] * states["cubeB_quat"][:, 0] +
+                           (states["cubeB_to_base_pos"][:, 2]-states["cubeB_size"][:]/2.-0.89) * (states["cubeB_to_base_pos"][:, 2]-states["cubeB_size"][:]/2.-0.89) + 
+                            states["cubeB_quat"][:, 0] * states["cubeB_quat"][:, 0] +
                             states["cubeB_quat"][:, 1] * states["cubeB_quat"][:, 1] +
                             states["cubeB_quat"][:, 2] * states["cubeB_quat"][:, 2])
-    cubeB_speed = torch.sqrt(states["cubeB_linvel"][:, 0] * states["cubeB_linvel"][:, 0] +
-                            states["cubeB_linvel"][:, 1] * states["cubeB_linvel"][:, 1] +
-                            states["cubeB_linvel"][:, 2] * states["cubeB_linvel"][:, 2])
-                    
-    # tray_orien = torch.sqrt(states["tray_quat"][:, 0] * states["tray_quat"][:, 0] +
-    #                         states["tray_quat"][:, 1] * states["tray_quat"][:, 1] +
-    #                         states["tray_quat"][:, 2] * states["tray_quat"][:, 2])
-
-    # print("ball_pos")
-    # print(states["ball_to_base_pos"][710, :])
-    # print("tray_pos")
-    # print(states["tray_to_base_pos"][710, :])
+    cubeB_speed = torch.sqrt((states["cubeB_linvel"][:, 0]-states["base_linvel"][:, 0]) * (states["cubeB_linvel"][:, 0]-states["base_linvel"][:, 0]) +
+                             (states["cubeB_linvel"][:, 1]-states["base_linvel"][:, 1]) * (states["cubeB_linvel"][:, 1]-states["base_linvel"][:, 1]) +
+                             (states["cubeB_linvel"][:, 2]-states["base_linvel"][:, 2]) * (states["cubeB_linvel"][:, 2]-states["base_linvel"][:, 2]))
 
     ball_pos_reward = 1.0 / (1.0 + ball_pos)
+    # ball_quat_reward = 1.0 / (1.0 + ball_quat)
     ball_speed_reward = 1.0 / (1.0 + ball_speed)
+    # ball_reward = ball_pos_reward * ball_quat_reward * ball_speed_reward
     ball_reward = ball_pos_reward * ball_speed_reward
 
     cubeA_pos_reward = 1.0 / (1.0 + cubeA_pos)
-    cubeA_quat_reward = 1.0 / (1.0 + cubeA_quat)
+    # cubeA_quat_reward = 1.0 / (1.0 + cubeA_quat)
     cubeA_speed_reward = 1.0 / (1.0 + cubeA_speed)
-    cubeA_reward = cubeA_pos_reward * cubeA_quat_reward * cubeA_speed_reward
+    # cubeA_reward = cubeA_pos_reward * cubeA_quat_reward * cubeA_speed_reward
+    cubeA_reward = cubeA_pos_reward * cubeA_speed_reward
 
     cubeB_pos_reward = 1.0 / (1.0 + cubeB_pos)
-    cubeB_quat_reward = 1.0 / (1.0 + cubeB_quat)
+    # cubeB_quat_reward = 1.0 / (1.0 + cubeB_quat)
     cubeB_speed_reward = 1.0 / (1.0 + cubeB_speed)
-    cubeB_reward = cubeB_pos_reward * cubeB_quat_reward * cubeB_speed_reward
+    # cubeB_reward = cubeB_pos_reward * cubeB_quat_reward * cubeB_speed_reward
+    cubeB_reward = cubeB_pos_reward * cubeB_speed_reward
 
-    #tray_reward = 1.0 / (1.0 + tray_orien)
-    # pos_penalty = states["ball_to_base_pos"][:, 2] - (states["tray_pos"][:, 2] + states["ball_size"][:])
 
     reward = ball_reward + cubeA_reward + cubeB_reward #* tray_reward # - pos_penalty
-    # reward = ball_reward
 
     reset = torch.where(progress_buf >= max_episode_length - 1, torch.ones_like(reset_buf), reset_buf)
-    # reset = torch.where((states["ball_to_base_pos"][:, 2] < states["tray_pos"][:, 2]) | (states["ball_pos_to_base"][:, 2] > states["tray_pos"][:, 2]+states["ball_size"][:]+0.05), torch.ones_like(reset_buf), reset)
     reset = torch.where((states["ball_to_base_pos"][:, 2] < states["tray_to_base_pos"][:, 2])|(states["cubeA_to_base_pos"][:, 2] < states["tray_to_base_pos"][:, 2])|(states["cubeB_to_base_pos"][:, 2] < states["tray_to_base_pos"][:, 2]), torch.ones_like(reset_buf), reset)
 
 
-    return reward, reset
+    return reward, reset, ball_speed

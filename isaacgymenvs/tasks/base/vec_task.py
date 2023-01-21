@@ -266,6 +266,8 @@ class VecTask(Env):
             (self.num_envs, self.num_states), device=self.device, dtype=torch.float)
         self.rew_buf = torch.zeros(
             self.num_envs, device=self.device, dtype=torch.float)
+        self.vel = torch.zeros(
+            self.num_envs, device=self.device, dtype=torch.float)
         self.reset_buf = torch.ones(
             self.num_envs, device=self.device, dtype=torch.long)
         self.timeout_buf = torch.zeros(
@@ -356,7 +358,7 @@ class VecTask(Env):
         if self.num_states > 0:
             self.obs_dict["states"] = self.get_state()
 
-        return self.obs_dict, self.rew_buf.to(self.rl_device), self.reset_buf.to(self.rl_device), self.extras
+        return self.obs_dict, self.rew_buf.to(self.rl_device), self.reset_buf.to(self.rl_device), self.extras, self.vel.to(self.rl_device)
 
     def zero_actions(self) -> torch.Tensor:
         """Returns a buffer with zero actions.
